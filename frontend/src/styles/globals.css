@@ -1,0 +1,129 @@
+:root{
+    --brand-900:#001030; --brand-800:#001040; --brand-700:#102050; --brand-600:#102060; --brand-500:#103070;
+    --text-strong:#eef3ff; --text-dim:#c7d1f5;
+    --glass-bg:rgba(255,255,255,.08); --glass-border:rgba(255,255,255,.22); --glass-highlight:rgba(255,255,255,.35);
+    --glass-shadow:rgba(0,0,0,.35);
+}
+
+html,body,#root{height:100%}
+body{
+    margin:0; color:var(--text-strong);
+    background:
+            radial-gradient(1200px 800px at 70% -10%, rgba(255,255,255,0.07), transparent 60%),
+            radial-gradient(900px 600px at 15% 10%, rgba(32,96,255,0.10), transparent 50%),
+            linear-gradient(180deg, var(--brand-900), var(--brand-600) 55%, var(--brand-500));
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+}
+
+/* ===== Liquid Glass base ===== */
+.glass{
+    background: linear-gradient(to bottom right, rgba(255,255,255,.12), rgba(255,255,255,.06)) var(--glass-bg);
+    border:1px solid var(--glass-border);
+    border-radius:16px;
+    box-shadow: 0 12px 28px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* ===== Form / Inputs / Labels ===== */
+.form-card{ width: 480px; margin: 96px auto; padding: 28px; }
+.field{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.label{
+    font-size:14px; letter-spacing:.2px; color:var(--text-dim);
+    text-shadow: 0 1px 0 rgba(0,0,0,.25);
+}
+.input,.textarea{
+    width:100%; color:var(--text-strong);
+    background: linear-gradient(to bottom, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:12px; padding:12px 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .06s ease;
+}
+.input::placeholder, .textarea::placeholder{ color:rgba(235,240,255,.65); }
+.input:focus,.textarea:focus{
+    border-color:rgba(255,255,255,.38);
+    box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.5);
+    transform: translateY(-1px);
+}
+.textarea{ min-height: 120px; resize: vertical; }
+
+/* ===== Buttons (Liquid Glass) ===== */
+.btn{
+    appearance:none; cursor:pointer; user-select:none;
+    color:var(--text-strong);
+    border:1px solid var(--glass-border);
+    border-radius:12px; padding:12px 18px; font-weight:600; letter-spacing:.2px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.16), rgba(255,255,255,.06));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 8px 20px rgba(0,0,0,.35);
+    backdrop-filter: blur(10px) saturate(160%);
+    transition: transform .06s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.35); }
+.btn:active{ transform: translateY(0); }
+.btn-primary{
+    border-color: rgba(100,160,255,.45);
+    background: linear-gradient(180deg, rgba(120,180,255,.28), rgba(120,180,255,.12));
+}
+.btn-ghost{
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+}
+
+/* Helpers */
+.center{ display:flex; justify-content:center; align-items:center; }
+.error{ color:#ffb4c6; margin:6px 0 0; }
+.container{ max-width:960px; margin:24px auto; padding:0 16px; }
+
+/* Box sizing global para evitar overflow de inputs/labels */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Evita transbordo das labels/inputs */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Botão central inferior (nova postagem) */
+.fab-bottom-center{
+    position: fixed;
+    left: 50%;
+    bottom: 48px;
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 18px 28px;
+    font-size: 18px;
+    border-radius: 24px;
+}
+
+/* Mantém centralização ao passar o mouse */
+.fab-bottom-center:hover { transform: translate(-50%, -1px); }
+.fab-bottom-center:active { transform: translate(-50%, 0); }
+
+
+/* Botão de perfil (logout) – canto superior esquerdo */
+.profile-btn{
+    position: fixed;
+    left: 24px;
+    top: 24px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    z-index: 40;
+}
+
+/* Centro absoluto de tela para páginas (não modal) */
+.screen-center{
+    min-height: 100vh;          /* ocupa a viewport toda */
+    display: grid;
+    place-items: center;        /* centraliza H e V */
+    padding: 24px;              /* respiro nas bordas */
+}
+
+/* Variante da form-card quando usada ao centro */
+.form-card--center{
+    margin: 0 !important;       /* ignora o margin da .form-card padrão */
+}
+
+.modal-overlay{
+    display: grid;
+    justify-content: center;
+}

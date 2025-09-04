@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
-import { AppDataSource } from '../../config/data-source.js';
-import { User } from '../../domain/entities/User.js';
-import { hash } from '../../utils/bcrypt.js';
+import { CreateUserSchema } from '../../domain/dtos/user.dto.js';
+import { create } from './users.services.js';
+import { softDeleteUser } from './users.services.js';
 
 export async function postUser(req: Request, res: Response) {
-    const { username, password } = req.body ?? {};
-    if (!username || !password) return res.status(400).json({ error: 'username/password required' });
+    // valida e tipa o body
+    const dto = await CreateUserSchema.parseAsync(req.body);
 
-    const repo = AppDataSource.getRepository(User);
-    const exists = await repo.findOne({ where: { username } });
-    if (exists) return res.status(409).json({ error: 'username taken' });
+    const out = await create(dto);
+    res.status(201).json(out);
+}
 
-    const u = repo.create({ username, password: await hash(password) });
-    await repo.save(u);
-    res.status(201).json({ id: u.id, username: u.username });
+export async function deleteMe(req: Request, res: Response) {
+    await softDeleteUser(req.user!.id);
+    res.status(204).end();
 }
