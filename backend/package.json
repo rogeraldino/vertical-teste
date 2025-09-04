@@ -1,0 +1,37 @@
+{
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.26"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.5.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "glob": "^9.0.0",
+    "rimraf": "^3.0.2"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typeorm:js": "node ./node_modules/typeorm/cli.js",
+    "migration:gen": "npm run build && npm run typeorm:js -- migration:generate -d dist/config/data-source.js src/database/migrations/CreateInitialSchema",
+    "build:migrations": "tsc -p tsconfig.migrations.json",
+    "migration:run": "npm run build && npm run build:migrations && npm run typeorm:js -- migration:run -d dist/config/data-source.js",
+    "migration:revert": "npm run build && npm run build:migrations && npm run typeorm:js -- migration:revert -d dist/config/data-source.js",
+    "migration:show": "npm run build && npm run build:migrations && npm run typeorm:js -- migration:show -d dist/config/data-source.js"
+  }
+}
