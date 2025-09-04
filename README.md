@@ -1,306 +1,59 @@
-vertical-loto-ts
+**vertical-loto-ts**
 
-Sistema full-stack (Node + React) com autenticação access_token / refresh_token, persistência em PostgreSQL e ORM TypeORM. O visual segue uma identidade azul noite com efeito Liquid Glass no login, botões, modais e cards.
+Sistema full-stack em Node e React com autenticação por access_token e refresh_token, persistência em PostgreSQL e mapeamento via TypeORM. A identidade visual segue um azul-noite com efeito Liquid Glass aplicado em login, botões, modais e cards.
 
-Stack
+**Stack**
 
-Backend
+Backend usa Node.js 20+, TypeScript em ESM (NodeNext), Express 5, TypeORM 0.3 e PostgreSQL 15. Autenticação com JWT (access e refresh com rotação de jti), hashing de senha com bcrypt, CORS configurável, middleware de autenticação Bearer e tratador central de erros.
 
-Node.js 20+, TypeScript (ESM), Express 5
+Frontend usa React com Vite e TypeScript, Axios com interceptor que faz refresh automático e trava múltiplos refresh simultâneos, React Router e CSS puro para o tema Liquid Glass.
 
-TypeORM 0.3 (DataSource + Migrations)
+Infra tem Docker para o banco (docker-compose) e configuração por meio de arquivos .env.
 
-PostgreSQL 15
+**Arquitetura**
 
-Autenticação: JWT (access + refresh com rotação de jti)
+No backend há app.ts e server.ts para bootstrap do Express, config/env.ts para tipar variáveis de ambiente, config/data-source.ts para o DataSource do TypeORM, pasta database com as migrations, domain com entities e dtos (Zod), modules com auth, users e posts, middlewares com auth e error handler e utils com helpers de bcrypt, jwt e paginação. A raiz do backend possui ormconfig.ts para a CLI do TypeORM apontar para o DataSource.
 
-access_token curto (ex.: 15m), refresh_token longo (ex.: 7d)
+No frontend há api com axios e interceptors, auth com AuthContext e guarda, components com LoginModal, PostModal e ProfileMenu, pages com Login, Register, PostsList e NewPost, services com auth, posts e users, styles com globals.css e types com tipos compartilhados.
 
-Hash de senhas: bcrypt
+**Modelagem de dados**
 
-Middlewares: CORS, Auth (Bearer), Error Handler
+Tabela users com id (uuid), username único, password com hash, created_at, updated_at e deleted_at para soft delete. Tabela user_logins registra sessões de refresh (id, user_id, created_at) e permite rotacionar e invalidar refresh tokens. Tabela posts com id, user_id referenciando users, title, message e created_at.
 
-Frontend
+**Endpoints**
 
-React + Vite + TypeScript
+1. Criação de usuário em POST /api/users com corpo contendo username e password.
+2. Exclusão da própria conta em DELETE /api/users/me, que marca deleted_at e apaga sessões e posts do usuário. 
+3. Login em POST /api/auth/login com username e password retornando access_token e refresh_token. 
+4. Refresh em POST /api/auth/refresh recebendo o refresh_token e entregando novo par de tokens com rotação. 
+5. Logout em POST /api/auth/logout invalidando a sessão atual. Perfil em GET /api/auth/me retornando id e username. 
+6. Meus posts em GET /api/posts e criação em POST /api/posts com title e message. 
+7. Feed global em GET /api/posts/all com parâmetros page, size e username, retornando as últimas postagens e o nome do autor.
 
-Axios (interceptor com refresh automático e “lock”)
+**Variáveis de ambiente**
 
-React Router
+Backend em backend/.env: PORT=3000, NODE_ENV=development, CORS_ORIGIN=http://localhost:5173
+, DB_HOST, DB_PORT=5432, DB_USERNAME, DB_PASSWORD, DB_NAME=vertical_loto, JWT_SECRET, JWT_ACCESS_EXPIRES_IN=15m, JWT_REFRESH_EXPIRES_IN=7d, BCRYPT_SALT_ROUNDS=10.
 
-Liquid Glass UI (CSS puro)
+Frontend em frontend/.env: VITE_API_URL=http://localhost:3000/api
+.
 
-Infra
+**Instalação no Windows (PostgreSQL local)**
 
-Docker (Postgres) + docker-compose.yml
+Instale Node LTS, Git e PostgreSQL 15. Durante a instalação do Postgres mantenha a porta 5432, usuário postgres e defina a senha (tem que coincidir com a senha do .env do backend). Crie o banco vertical_loto. Opcionalmente crie um usuário admin com senha admin e conceda privilégios no banco.
 
-.env para variáveis de ambiente
+No backend, entre na pasta backend, copie .env preenchendo DB_HOST=localhost, credenciais e segredo JWT, instale dependências com npm install, aplique as migrations com npm run migration:run e inicie com npm run dev. A API ficará em http://localhost:3000/api
+.
 
-Arquitetura (resumo)
-vertical-loto-ts/
-├─ backend/
-│  ├─ src/
-│  │  ├─ app.ts / server.ts  (Express bootstrap)
-│  │  ├─ config/
-│  │  │  ├─ env.ts           (variáveis ENV tipadas)
-│  │  │  └─ data-source.ts   (TypeORM DataSource)
-│  │  ├─ database/
-│  │  │  └─ migrations/      (migrations TypeORM)
-│  │  ├─ domain/
-│  │  │  ├─ entities/        (User, Post, UserLogin)
-│  │  │  └─ dtos/            (Zod schemas p/ validação)
-│  │  ├─ modules/
-│  │  │  ├─ auth/            (login, refresh, logout)
-│  │  │  ├─ users/           (criar usuário, delete “me”)
-│  │  │  └─ posts/           (meus posts, feed global)
-│  │  ├─ middlewares/        (auth, error handler)
-│  │  └─ utils/              (bcrypt, jwt, paginação)
-│  └─ ormconfig.ts           (TypeORM CLI aponta p/ DataSource)
-└─ frontend/
-└─ src/
-├─ api/                (axios + interceptors)
-├─ auth/               (AuthContext, ProtectedRoute)
-├─ components/         (LoginModal, PostModal, etc)
-├─ pages/              (Login, Register, PostsList, NewPost)
-├─ services/           (auth, posts, users)
-├─ styles/             (globals.css - Liquid Glass)
-└─ types/
+No frontend, entre na pasta frontend, copie .env.example para .env com VITE_API_URL apontando para http://localhost:3000/api
+, instale dependências e execute npm run dev. A aplicação abrirá em http://localhost:5173
+.
 
+**Instalação no WSL 2 (DB no Docker)**
 
-Modelagem principal
+Ative WSL 2 com uma distribuição Ubuntu e instale Docker Desktop habilitando o motor WSL e a integração com sua distro. No WSL, dentro do diretório do projeto, suba o Postgres com docker compose up -d db. O compose mapeia 5432 para o host, então use DB_HOST igual ao IP do conteiner (VM), DB_PORT=5432, DB_USERNAME=admin, DB_PASSWORD=admin e DB_NAME=vertical_loto no .env do backend. 
 
-users: id (uuid), username (unique), password (hash), timestamps e deleted_at.
+Com o banco ativo, no WSL rode o backend como no Windows: copie o .env, instale dependências, aplique migrations e inicie o servidor. No frontend, faça o mesmo e acesse pelo navegador do Windows em http://localhost:5173
+, que comunicará com http://localhost:3000
+no WSL normalmente.
 
-user_logins: sessões/”refresh states” (armazena user_id, created_at); usada para rotacionar/invalidar refresh tokens.
-
-posts: id, user_id (FK), title, message, created_at.
-
-Endpoints (principais)
-
-POST /api/users — cria usuário { username, password }
-
-DELETE /api/users/me — soft delete do usuário logado (marca deleted_at e apaga sessões e posts do usuário)
-
-POST /api/auth/login — { username, password } → { access_token, refresh_token }
-
-POST /api/auth/refresh — { refresh_token } → novo par de tokens (com rotação)
-
-POST /api/auth/logout — invalida a sessão atual
-
-GET /api/auth/me — retorna { id, username } do usuário logado
-
-GET /api/posts — lista meus posts (auth)
-
-POST /api/posts — cria post (auth)
-
-GET /api/posts/all?page&size&username — feed global (10 últimos por padrão) + username do autor (auth)
-
-Variáveis de ambiente
-Backend (backend/.env)
-# Server
-PORT=3000
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
-
-# DB
-DB_HOST=localhost          # ver seção Windows/WSL
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=12345
-DB_NAME=vertical_loto
-
-# JWT
-JWT_SECRET=supersecretkey
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-# Bcrypt
-BCRYPT_SALT_ROUNDS=10
-
-Frontend (frontend/.env)
-VITE_API_URL=http://localhost:3000/api
-
-Scripts úteis
-Backend (backend/package.json)
-
-npm run dev — desenvolvimento com ts-node-dev
-
-npm run build — compila TS p/ dist/
-
-npm start — roda dist/server.js
-
-npm run migration:gen — gera migration (a partir das entidades)
-
-npm run migration:run — aplica migrations
-
-npm run migration:revert — reverte última
-
-Frontend (frontend/package.json)
-
-npm run dev — Vite dev server
-
-npm run build — build de produção
-
-npm run preview — pré-visualização do build
-
-Boas práticas adotadas
-
-ESM + TypeScript (NodeNext): imports relativos com sufixo .js no código TS.
-
-DTOs com Zod: validação consistente no controller, respostas 400 limpas.
-
-Auth robusto:
-
-access_token curto; refresh_token longo.
-
-rotação a cada refresh (novo jti), invalidando o anterior.
-
-registro de logins em user_logins e limpeza em logout.
-
-Erro handler central: formata exceptions e mensagens de validação.
-
-CORS configurado por env.
-
-Índices únicos + captura de erro 23505 (duplicidade).
-
-Transações para operações críticas (ex.: delete do usuário).
-
-Frontend com:
-
-Axios interceptor que renova token uma única vez por vez (lock) e repete a request original.
-
-AuthContext central (user + tokens).
-
-CSS simples e performático (Liquid Glass).
-
-Migrations versionadas (sem depender de synchronize: true).
-
-Instalação e Execução
-1) Requisitos
-
-Node.js 20+ (LTS)
-
-NPM (ou PNPM/Yarn, se preferir)
-
-Git
-
-Windows: ou PostgreSQL local (instalador) ou Docker Desktop
-
-WSL 2: Ubuntu + Docker (via Docker Desktop integrado ao WSL)
-
-2) Windows (PostgreSQL local — “padrão”)
-   2.1 Instalar ferramentas
-
-Node LTS: winget install OpenJS.NodeJS.LTS
-
-Git: winget install Git.Git
-
-PostgreSQL 15: winget install PostgreSQL.PostgreSQL
-(ou baixe do site oficial)
-
-Durante a instalação do Postgres, anote:
-
-Porta: 5432 (padrão)
-
-Usuário: postgres
-
-Senha: escolha uma (ex.: 12345)
-
-2.2 Criar DB
-
-Abra pgAdmin ou psql e crie o banco:
-
-CREATE DATABASE vertical_loto;
-
-
-Se quiser um usuário dedicado:
-
-CREATE USER admin WITH PASSWORD 'admin';
-GRANT ALL PRIVILEGES ON DATABASE vertical_loto TO admin;
-
-2.3 Backend
-cd vertical-loto-ts/backend
-cp .env.example .env  # (ou crie .env conforme seção acima)
-# DB_HOST=localhost (ou 127.0.0.1)
-npm install
-npm run migration:run
-npm run dev
-# API em http://localhost:3000/api
-
-2.4 Frontend
-cd ../frontend
-cp .env.example .env   # VITE_API_URL=http://localhost:3000/api
-npm install
-npm run dev
-# abra http://localhost:5173
-
-3) WSL 2 (DB no Docker)
-   3.1 Pré-requisitos
-
-Windows 11/10 com WSL 2 e distro Ubuntu:
-
-wsl --install
-
-
-Docker Desktop (habilite “Use the WSL 2 based engine” e integração com sua distro)
-
-3.2 Subir o Postgres via Docker (dentro do WSL)
-
-No WSL (Ubuntu):
-
-cd ~/vertical-loto-ts
-docker compose up -d db
-# (ou) docker-compose up -d db  -- se usa CLI legado
-
-
-O docker-compose.yml expõe 5432:5432. Assim, você tem DUAS opções para DB_HOST:
-
-Opção A — Use localhost (recomendado)
-
-Como há mapeamento de porta, o backend (rodando no WSL) pode acessar Postgres via:
-
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_USERNAME=admin
-DB_PASSWORD=admin
-DB_NAME=vertical_loto
-
-
-Teste:
-
-sudo apt-get install -y postgresql-client
-psql -h 127.0.0.1 -p 5432 -U admin -d vertical_loto -c "select now();"
-
-Opção B — Usar o IP do container
-
-Se preferir usar o IP interno do container (não é necessário, mas é possível):
-
-Descobrir IP do container:
-
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ts_postgres
-
-
-Depois, em .env:
-
-DB_HOST=<IP retornado>
-
-
-Atenção: esse IP muda se o container for recriado. Prefira localhost com porta mapeada.
-
-3.3 Rodar o backend no WSL
-cd backend
-cp .env.example .env
-# Ajuste DB_* conforme A ou B
-npm install
-npm run migration:run
-npm run dev
-
-3.4 Rodar o frontend no WSL
-cd ../frontend
-cp .env.example .env
-# VITE_API_URL=http://localhost:3000/api
-npm install
-npm run dev
-
-
-Abra o navegador no Windows em http://localhost:5173. Ele conversa com o backend do WSL via localhost:3000 normalmente.
